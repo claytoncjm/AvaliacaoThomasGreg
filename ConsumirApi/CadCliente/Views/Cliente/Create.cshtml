@@ -1,0 +1,174 @@
+@model CadCliente.Models.ClienteViewModel
+
+@{
+    ViewData["Title"] = "Novo Cliente";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8">
+            @if (TempData["Success"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["Success"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <form asp-action="Create" enctype="multipart/form-data" id="createForm">
+                @if (!ViewContext.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    </div>
+                }
+                
+                <div asp-validation-summary="All" class="text-danger"></div>
+                
+                <div class="form-group mb-3">
+                    <label asp-for="Nome" class="control-label"></label>
+                    <input asp-for="Nome" class="form-control" />
+                    <span asp-validation-for="Nome" class="text-danger"></span>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label asp-for="Email" class="control-label"></label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+                
+                <div class="form-group mb-3">
+                    <label asp-for="LogotipoFile" class="control-label">Logo</label>
+                    <div class="custom-file">
+                        <input type="file" class="form-control" id="logoFile" name="LogotipoFile" accept="image/*" onchange="previewLogo(this);" />
+                    </div>
+                    <div id="logoPreviewContainer" class="mt-2" style="display: none;">
+                        <img id="logoPreview" src="#" alt="Preview do Logo" style="max-width: 200px; max-height: 200px;" class="img-thumbnail" />
+                        <button type="button" class="btn btn-sm btn-danger mt-2" onclick="removeLogo();">Remover Logo</button>
+                    </div>
+                </div>
+
+                <div id="enderecos">
+                    <h4>Endereços</h4>
+                    @if (Model.Logradouros != null)
+                    {
+                        @for (var i = 0; i < Model.Logradouros.Count; i++)
+                        {
+                            <div class="endereco-item border p-3 mb-3">
+                                <div class="form-group">
+                                    <label asp-for="@Model.Logradouros[i].Endereco" class="control-label">Endereço</label>
+                                    <input asp-for="@Model.Logradouros[i].Endereco" class="form-control" />
+                                    <span asp-validation-for="@Model.Logradouros[i].Endereco" class="text-danger"></span>
+                                </div>
+                                <button type="button" class="btn btn-danger btn-sm mt-2 remover-endereco">Remover Endereço</button>
+                            </div>
+                        }
+                    }
+                </div>
+
+                <div class="form-group mb-3">
+                    <button type="button" id="addEndereco" class="btn btn-secondary">Adicionar Endereço</button>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary" id="btnSubmit">Criar</button>
+                    <a asp-action="Index" class="btn btn-secondary">Voltar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        $(document).ready(function () {
+            var form = $("#createForm");
+            
+            // Adicionar novo endereço
+            $("#addEndereco").click(function () {
+                var index = $("#enderecos .endereco-item").length;
+                var novoEndereco = `
+                    <div class="endereco-item border p-3 mb-3">
+                        <div class="form-group">
+                            <label class="control-label">Endereço</label>
+                            <input name="Logradouros[${index}].Endereco" class="form-control" />
+                            <span class="text-danger"></span>
+                        </div>
+                        <button type="button" class="btn btn-danger btn-sm mt-2 remover-endereco">Remover Endereço</button>
+                    </div>`;
+                $("#enderecos").append(novoEndereco);
+            });
+
+            // Remover endereço
+            $(document).on("click", ".remover-endereco", function () {
+                $(this).closest(".endereco-item").remove();
+                reindexarEnderecos();
+            });
+
+            // Reindexar endereços após remoção
+            function reindexarEnderecos() {
+                $("#enderecos .endereco-item").each(function (index) {
+                    $(this).find("input").attr("name", `Logradouros[${index}].Endereco`);
+                });
+            }
+
+            // Limpar formulário após sucesso
+            if (@Json.Serialize(TempData["Success"] != null)) {
+                form[0].reset();
+                $("#enderecos").empty();
+                $("#btnSubmit").prop("disabled", false).html('Criar');
+            }
+
+            // Desabilitar botão ao enviar
+            form.on("submit", function (e) {
+                if (form.valid()) {
+                    $("#btnSubmit").prop("disabled", true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Salvando...');
+                }
+            });
+        });
+
+        function previewLogo(input) {
+            const preview = document.getElementById('logoPreview');
+            const container = document.getElementById('logoPreviewContainer');
+            
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                
+                // Verificar o tipo do arquivo
+                if (!file.type.match('image.*')) {
+                    alert('Por favor, selecione apenas arquivos de imagem.');
+                    input.value = '';
+                    return;
+                }
+                
+                // Verificar o tamanho (2MB)
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('O arquivo não pode ser maior que 2MB.');
+                    input.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    container.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removeLogo() {
+            const input = document.getElementById('logoFile');
+            const preview = document.getElementById('logoPreview');
+            const container = document.getElementById('logoPreviewContainer');
+            
+            input.value = '';
+            preview.src = '#';
+            container.style.display = 'none';
+        }
+    </script>
+}

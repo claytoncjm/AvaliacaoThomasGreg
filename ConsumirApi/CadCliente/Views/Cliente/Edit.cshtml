@@ -1,0 +1,123 @@
+@model CadCliente.Models.ClienteViewModel
+
+@{
+    ViewData["Title"] = "Editar Cliente";
+}
+
+<h1>Editar Cliente</h1>
+
+<div class="row">
+    <div class="col-md-8">
+        <form asp-action="Edit" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            
+            <div class="form-group mb-3">
+                <label asp-for="Nome" class="control-label"></label>
+                <input asp-for="Nome" class="form-control" />
+                <span asp-validation-for="Nome" class="text-danger"></span>
+            </div>
+            
+            <div class="form-group mb-3">
+                <label asp-for="Email" class="control-label"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="LogotipoFile" class="control-label">Logo</label>
+                <div class="custom-file">
+                    <input type="file" class="form-control" id="logoFile" name="LogotipoFile" accept="image/*" onchange="previewLogo(this);" />
+                </div>
+                <div id="logoPreviewContainer" class="mt-2" style="@(string.IsNullOrEmpty(Model.LogotipoBase64) ? "display: none;" : "")">
+                    <img id="logoPreview" src="@Model.LogotipoBase64" alt="Preview do Logo" style="max-width: 200px; max-height: 200px;" class="img-thumbnail" />
+                    <button type="button" class="btn btn-sm btn-danger mt-2" onclick="removeLogo();">Remover Logo</button>
+                </div>
+            </div>
+
+            <div class="form-group mb-3">
+                <h4>Endereços</h4>
+                <div id="enderecosContainer">
+                    @for (var i = 0; i < Model.Logradouros.Count; i++)
+                    {
+                        <div class="endereco-item mb-2 d-flex">
+                            <input type="hidden" name="Logradouros[@i].Id" value="@Model.Logradouros[i].Id" />
+                            <input type="text" name="Logradouros[@i].Endereco" value="@Model.Logradouros[i].Endereco" class="form-control" />
+                            <button type="button" class="btn btn-danger ms-2" onclick="removerEndereco(this)">X</button>
+                        </div>
+                    }
+                </div>
+                <button type="button" class="btn btn-secondary" onclick="adicionarEndereco()">Adicionar Endereço</button>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">Salvar</button>
+                <a asp-action="Index" class="btn btn-secondary">Voltar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        let enderecoCount = @Model.Logradouros.Count;
+
+        function adicionarEndereco() {
+            const container = document.getElementById('enderecosContainer');
+            const div = document.createElement('div');
+            div.className = 'endereco-item mb-2 d-flex';
+            div.innerHTML = `
+                <input type="text" name="Logradouros[${enderecoCount}].Endereco" class="form-control" placeholder="Digite o endereço" />
+                <button type="button" class="btn btn-danger ms-2" onclick="removerEndereco(this)">X</button>
+            `;
+            container.appendChild(div);
+            enderecoCount++;
+        }
+
+        function removerEndereco(button) {
+            button.parentElement.remove();
+        }
+
+        function previewLogo(input) {
+            const preview = document.getElementById('logoPreview');
+            const container = document.getElementById('logoPreviewContainer');
+            
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                
+                // Verificar o tipo do arquivo
+                if (!file.type.match('image.*')) {
+                    alert('Por favor, selecione apenas arquivos de imagem.');
+                    input.value = '';
+                    return;
+                }
+                
+                // Verificar o tamanho (2MB)
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('O arquivo não pode ser maior que 2MB.');
+                    input.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    container.style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removeLogo() {
+            const input = document.getElementById('logoFile');
+            const preview = document.getElementById('logoPreview');
+            const container = document.getElementById('logoPreviewContainer');
+            
+            input.value = '';
+            preview.src = '#';
+            container.style.display = 'none';
+        }
+    </script>
+}

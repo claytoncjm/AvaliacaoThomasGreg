@@ -1,0 +1,144 @@
+===========================================
+MANUAL DO SISTEMA DE CADASTRO DE CLIENTES
+===========================================
+
+1. VISÃO GERAL
+--------------
+O sistema é composto por duas partes principais:
+a) API REST (Backend)
+b) Aplicação MVC (Frontend)
+
+2. CONFIGURAÇÃO E EXECUÇÃO
+-------------------------
+2.1 API (Backend)
+    - Porta padrão: 44300
+    - URL base: https://localhost:44300
+    - Para executar: Abra o projeto ApiCadCliente no Visual Studio e pressione F5
+    - Banco de dados: SQL Server (criado automaticamente no primeiro uso)
+
+2.2 Aplicação MVC (Frontend)
+    - Porta padrão: 44362
+    - URL base: https://localhost:44362
+    - Para executar: Abra o projeto CadCliente no Visual Studio e pressione F5
+
+IMPORTANTE: A API deve ser iniciada ANTES da aplicação MVC.
+
+3. API REST (BACKEND)
+--------------------
+3.1 Endpoints de Autenticação
+    POST /api/Auth/register
+        - Registra um novo usuário
+        - Parâmetros: Username, Password, ConfirmPassword
+    
+    POST /api/Auth/login
+        - Realiza login
+        - Parâmetros: Username, Password
+        - Retorna: Token JWT
+
+3.2 Endpoints de Clientes
+    GET /api/Cliente
+        - Lista todos os clientes
+    
+    GET /api/Cliente/{id}
+        - Obtém um cliente específico
+    
+    POST /api/Cliente
+        - Cria um novo cliente
+        - Parâmetros: Nome, Email, Logotipo (base64), Logradouros
+    
+    PUT /api/Cliente/{id}
+        - Atualiza um cliente
+        - Parâmetros: Nome, Email, Logotipo (base64), Logradouros
+    
+    DELETE /api/Cliente/{id}
+        - Remove um cliente
+
+4. APLICAÇÃO MVC (FRONTEND)
+--------------------------
+4.1 Autenticação
+    - Tela de Login (/Auth/Login)
+        * Campos: Usuário e Senha
+        * Opções: Criar Conta, Esqueci Minha Senha
+    
+    - Tela de Registro (/Auth/Register)
+        * Campos: Usuário, Senha, Confirmar Senha
+        * Validações: Senha mínima de 6 caracteres
+
+4.2 Gestão de Clientes
+    - Lista de Clientes (/Cliente/Index)
+        * Exibe todos os clientes cadastrados
+        * Botões: Novo Cliente, Editar, Detalhes, Excluir
+        * Mostra: Nome, Email, Quantidade de Endereços, Logo
+    
+    - Criar Cliente (/Cliente/Create)
+        * Campos: Nome, Email, Logo (upload de imagem)
+        * Endereços: Adicionar/Remover múltiplos endereços
+    
+    - Editar Cliente (/Cliente/Edit/{id})
+        * Mesmos campos da criação
+        * Mostra imagem atual do logo
+    
+    - Detalhes do Cliente (/Cliente/Details/{id})
+        * Visualização completa dos dados
+        * Lista todos os endereços
+    
+    - Excluir Cliente (/Cliente/Delete/{id})
+        * Confirmação antes da exclusão
+
+5. RECURSOS E FUNCIONALIDADES
+----------------------------
+5.1 Segurança
+    - Autenticação via JWT Token
+    - Proteção contra CSRF
+    - Senhas criptografadas
+    - Validação de dados
+
+5.2 Upload de Imagens
+    - Formatos suportados: JPG, PNG, GIF
+    - Tamanho máximo recomendado: 1MB
+    - Conversão automática para base64
+
+5.3 Validações
+    - Campos obrigatórios
+    - Formato de email
+    - Confirmação de senha
+    - Tamanho mínimo de senha
+
+5.4 Interface
+    - Design responsivo
+    - Mensagens de feedback
+    - Alertas auto-hide
+    - Ícones intuitivos
+    - Tabelas com scroll horizontal
+
+6. SOLUÇÃO DE PROBLEMAS
+----------------------
+6.1 Erros Comuns
+    - "Não foi possível conectar ao servidor"
+        * Verifique se a API está rodando
+        * Confirme as portas configuradas
+    
+    - "Falha ao fazer login"
+        * Verifique as credenciais
+        * Confirme se o usuário está registrado
+    
+    - "Erro ao carregar clientes"
+        * Verifique a conexão com a API
+        * Confirme se o token não expirou
+
+6.2 Dicas
+    - Sempre inicie a API antes do MVC
+    - Mantenha os dois projetos rodando simultaneamente
+    - Use o navegador em modo normal (não privativo)
+    - Limpe o cache do navegador se necessário
+
+7. REQUISITOS TÉCNICOS
+---------------------
+- .NET 6.0 ou superior
+- SQL Server
+- Visual Studio 2022
+- Navegador moderno (Chrome, Firefox, Edge)
+
+===========================================
+Fim do Manual - v1.0 - Fevereiro/2025
+===========================================

@@ -1,0 +1,103 @@
+@model IEnumerable<CadCliente.Models.ClienteViewModel>
+
+@{
+    ViewData["Title"] = "Lista de Clientes";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Novo Cliente</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Logo</th>
+            <th>Nome</th>
+            <th>Email</th>
+            <th>Endereços</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @if (!string.IsNullOrEmpty(item.LogotipoBase64))
+                    {
+                        <img src="@item.LogotipoBase64" alt="Logo" style="max-width: 50px; max-height: 50px; cursor: pointer;" 
+                             onclick="showLogoModal('@item.LogotipoBase64', '@item.Nome')" />
+                    }
+                    else
+                    {
+                        <span class="text-muted">Sem logo</span>
+                    }
+                </td>
+                <td>@item.Nome</td>
+                <td>@item.Email</td>
+                <td>
+                    @if (item.Logradouros != null && item.Logradouros.Any())
+                    {
+                        <div class="dropdown">
+                            <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownEnderecos_@item.Id" data-bs-toggle="dropdown" aria-expanded="false">
+                                Ver Endereços (@item.Logradouros.Count)
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownEnderecos_@item.Id">
+                                @foreach (var endereco in item.Logradouros)
+                                {
+                                    <li><span class="dropdown-item">@endereco.Endereco</span></li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="text-muted">Sem endereços</span>
+                    }
+                </td>
+                <td>
+                    <div class="btn-group">
+                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Editar</a>
+                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja excluir este cliente?')">Excluir</a>
+                    </div>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<!-- Modal para exibir o logo em tamanho maior -->
+<div class="modal fade" id="logoModal" tabindex="-1" aria-labelledby="logoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="logoModalLabel">Logo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img id="modalLogoImage" src="" alt="Logo" style="max-width: 100%;" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function showLogoModal(logoBase64, nome) {
+            document.getElementById('modalLogoImage').src = logoBase64;
+            document.getElementById('logoModalLabel').textContent = 'Logo - ' + nome;
+            var modal = new bootstrap.Modal(document.getElementById('logoModal'));
+            modal.show();
+        }
+    </script>
+}

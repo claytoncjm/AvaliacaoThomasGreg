@@ -1,0 +1,65 @@
+@model CadCliente.Models.ClienteViewModel
+
+@{
+    ViewData["Title"] = "Excluir Cliente";
+}
+
+<div class="container">
+    <h1>Excluir Cliente</h1>
+
+    <div class="alert alert-danger">
+        <h4>Tem certeza que deseja excluir este cliente?</h4>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-3">
+                            @Html.DisplayNameFor(model => model.Nome)
+                        </dt>
+                        <dd class="col-sm-9">
+                            @Html.DisplayFor(model => model.Nome)
+                        </dd>
+
+                        <dt class="col-sm-3">
+                            @Html.DisplayNameFor(model => model.Email)
+                        </dt>
+                        <dd class="col-sm-9">
+                            @Html.DisplayFor(model => model.Email)
+                        </dd>
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    @if (!string.IsNullOrEmpty(Model.LogotipoBase64))
+                    {
+                        <div class="text-center">
+                            <img src="@Model.LogotipoBase64" alt="Logotipo" style="max-width: 200px; max-height: 200px;" class="img-thumbnail" />
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <h4>Endereços que serão excluídos</h4>
+                <div class="list-group">
+                    @foreach (var logradouro in Model.Logradouros)
+                    {
+                        <div class="list-group-item">
+                            @logradouro.Endereco
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-3">
+        <form asp-action="Delete">
+            <input type="hidden" asp-for="Id" />
+            <button type="submit" class="btn btn-danger">Confirmar Exclusão</button>
+            <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+        </form>
+    </div>
+</div>
