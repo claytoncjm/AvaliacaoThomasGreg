@@ -216,7 +216,20 @@ namespace CadCliente.Services
                 EnsureTokenIsSet();
                 await ProcessLogoFile(cliente);
 
-                var response = await _httpClient.PostAsJsonAsync($"{_apiBaseUrl}Cliente", cliente);
+                // Criar um formulário multipart
+                var form = new MultipartFormDataContent();
+                form.Add(new StringContent(cliente.Nome), "Nome");
+                form.Add(new StringContent(cliente.Email), "Email");
+
+                // Adicionar o arquivo se existir
+                if (cliente.LogotipoFile != null)
+                {
+                    var fileContent = new StreamContent(cliente.LogotipoFile.OpenReadStream());
+                    fileContent.Headers.ContentType = new MediaTypeHeaderValue(cliente.LogotipoFile.ContentType);
+                    form.Add(fileContent, "LogotipoFile", cliente.LogotipoFile.FileName);
+                }
+
+                var response = await _httpClient.PostAsync($"{_apiBaseUrl}Cliente", form);
                 var responseContent = await response.Content.ReadAsStringAsync();
                 
                 _logger.LogInformation("Resposta da API - StatusCode: {StatusCode}, Content: {Content}",
