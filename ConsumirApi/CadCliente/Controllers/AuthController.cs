@@ -4,16 +4,19 @@ using CadCliente.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
+using Microsoft.Extensions.Logging;
 
 namespace CadCliente.Controllers
 {
     public class AuthController : Controller
     {
         private readonly ApiService _apiService;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(ApiService apiService)
+        public AuthController(ApiService apiService, ILogger<AuthController> logger)
         {
             _apiService = apiService;
+            _logger = logger;
         }
 
         [HttpGet]
@@ -37,7 +40,10 @@ namespace CadCliente.Controllers
 
             try
             {
+                _logger.LogInformation("Tentando fazer login para usuário: {Username}", model.Username);
+                
                 var token = await _apiService.LoginAsync(model);
+                _logger.LogInformation("Login bem-sucedido, token recebido");
 
                 // Armazenar o token JWT
                 _apiService.SetAuthToken(token);
@@ -60,10 +66,12 @@ namespace CadCliente.Controllers
                     new ClaimsPrincipal(claimsIdentity),
                     authProperties);
 
+                _logger.LogInformation("Usuário autenticado com sucesso, redirecionando para a lista de clientes");
                 return RedirectToAction("Index", "Cliente");
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "Erro durante o login");
                 ModelState.AddModelError("", ex.Message);
                 return View(model);
             }
@@ -101,10 +109,11 @@ namespace CadCliente.Controllers
             }
         }
 
+        [HttpPost]
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return RedirectToAction("Login");
+            return RedirectToAction(nameof(Login));
         }
     }
 }

@@ -14,11 +14,28 @@
     </div>
 }
 
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div id="loadingMessage" class="alert alert-info" style="display: none;">
+    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+    Carregando clientes...
+</div>
+
+<div id="successMessage" class="alert alert-success" style="display: none;">
+    Clientes carregados com sucesso!
+</div>
+
 <p>
     <a asp-action="Create" class="btn btn-primary">Novo Cliente</a>
 </p>
 
-<table class="table">
+<table class="table" id="clientesTable" style="display: none;">
     <thead>
         <tr>
             <th>Logo</th>
@@ -93,6 +110,29 @@
 
 @section Scripts {
     <script>
+        // Quando a página carregar
+        document.addEventListener('DOMContentLoaded', function () {
+            // Mostrar mensagem de carregamento
+            document.getElementById('loadingMessage').style.display = 'block';
+            
+            // Simular um pequeno delay para mostrar o carregamento
+            setTimeout(function() {
+                // Esconder mensagem de carregamento
+                document.getElementById('loadingMessage').style.display = 'none';
+                
+                // Mostrar mensagem de sucesso
+                document.getElementById('successMessage').style.display = 'block';
+                
+                // Mostrar a tabela
+                document.getElementById('clientesTable').style.display = 'table';
+                
+                // Esconder mensagem de sucesso após 3 segundos
+                setTimeout(function() {
+                    document.getElementById('successMessage').style.display = 'none';
+                }, 3000);
+            }, 1000);
+        });
+
         function showLogoModal(logoBase64, nome) {
             document.getElementById('modalLogoImage').src = logoBase64;
             document.getElementById('logoModalLabel').textContent = 'Logo - ' + nome;

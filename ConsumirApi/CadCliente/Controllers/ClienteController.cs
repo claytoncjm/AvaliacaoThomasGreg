@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using CadCliente.Models;
 using CadCliente.Services;
 using Microsoft.AspNetCore.Authorization;
-using System.Diagnostics;
 
 namespace CadCliente.Controllers
 {
@@ -22,12 +21,20 @@ namespace CadCliente.Controllers
         {
             try
             {
+                _logger.LogInformation("Iniciando busca de clientes");
                 var clientes = await _apiService.GetClientesAsync();
+                _logger.LogInformation("Clientes obtidos com sucesso. Total: {Count}", clientes?.Count() ?? 0);
+
                 if (!clientes.Any())
                 {
-                    ViewBag.Message = "Carregando clientes..."; 
+                    ViewBag.Message = "Nenhum cliente encontrado.";
                 }
                 return View(clientes);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                _logger.LogWarning("Usuário não está autenticado. Redirecionando para login");
+                return RedirectToAction("Login", "Auth");
             }
             catch (Exception ex)
             {
@@ -50,17 +57,18 @@ namespace CadCliente.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    // Ponto de breakpoint #1 - Antes de processar
                     _logger.LogInformation("Iniciando criação do cliente: {Nome}", cliente.Nome);
-                    
                     await _apiService.CreateClienteAsync(cliente);
-                    
-                    // Ponto de breakpoint #2 - Após processar
                     _logger.LogInformation("Cliente criado com sucesso: {Nome}", cliente.Nome);
                     
                     TempData["SuccessMessage"] = "Cliente criado com sucesso!";
                     return RedirectToAction(nameof(Index));
                 }
+            }
+            catch (UnauthorizedAccessException)
+            {
+                _logger.LogWarning("Usuário não está autenticado. Redirecionando para login");
+                return RedirectToAction("Login", "Auth");
             }
             catch (Exception ex)
             {
@@ -82,6 +90,11 @@ namespace CadCliente.Controllers
                 }
                 return View(cliente);
             }
+            catch (UnauthorizedAccessException)
+            {
+                _logger.LogWarning("Usuário não está autenticado. Redirecionando para login");
+                return RedirectToAction("Login", "Auth");
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Erro ao buscar cliente para edição: {Id}", id);
@@ -98,28 +111,18 @@ namespace CadCliente.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    // Ponto de breakpoint #3 - Antes de atualizar
                     _logger.LogInformation("Iniciando atualização do cliente: {Id}", id);
-                    
-                    // Log do tipo e tamanho da imagem
-                    if (cliente.LogotipoFile != null)
-                    {
-                        _logger.LogInformation(
-                            "Dados da imagem - Nome: {FileName}, Tipo: {ContentType}, Tamanho: {Length} bytes",
-                            cliente.LogotipoFile.FileName,
-                            cliente.LogotipoFile.ContentType,
-                            cliente.LogotipoFile.Length
-                        );
-                    }
-
                     await _apiService.UpdateClienteAsync(id, cliente);
-                    
-                    // Ponto de breakpoint #4 - Após atualizar
                     _logger.LogInformation("Cliente atualizado com sucesso: {Id}", id);
                     
                     TempData["SuccessMessage"] = "Cliente atualizado com sucesso!";
                     return RedirectToAction(nameof(Index));
                 }
+            }
+            catch (UnauthorizedAccessException)
+            {
+                _logger.LogWarning("Usuário não está autenticado. Redirecionando para login");
+                return RedirectToAction("Login", "Auth");
             }
             catch (Exception ex)
             {
@@ -130,48 +133,22 @@ namespace CadCliente.Controllers
             return View(cliente);
         }
 
-        public async Task<IActionResult> Details(int id)
-        {
-            try
-            {
-                var cliente = await _apiService.GetClienteByIdAsync(id);
-                return View(cliente);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erro ao buscar cliente para detalhes: {Id}", id);
-                TempData["Error"] = $"Erro ao buscar cliente: {ex.Message}";
-                return RedirectToAction(nameof(Index));
-            }
-        }
-
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             try
             {
-                var cliente = await _apiService.GetClienteByIdAsync(id);
-                if (cliente == null)
-                {
-                    return NotFound();
-                }
-                return View(cliente);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Erro ao buscar cliente para exclusão: {Id}", id);
-                TempData["Error"] = $"Erro ao buscar cliente: {ex.Message}";
-                return RedirectToAction(nameof(Index));
-            }
-        }
-
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            try
-            {
+                _logger.LogInformation("Iniciando exclusão do cliente: {Id}", id);
                 await _apiService.DeleteClienteAsync(id);
-                TempData["Success"] = "Cliente excluído com sucesso!";
+                _logger.LogInformation("Cliente excluído com sucesso: {Id}", id);
+                
+                TempData["SuccessMessage"] = "Cliente excluído com sucesso!";
+            }
+            catch (UnauthorizedAccessException)
+            {
+                _logger.LogWarning("Usuário não está autenticado. Redirecionando para login");
+                return RedirectToAction("Login", "Auth");
             }
             catch (Exception ex)
             {

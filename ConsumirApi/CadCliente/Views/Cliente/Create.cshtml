@@ -42,11 +42,23 @@
                 <div class="form-group mb-3">
                     <label asp-for="LogotipoFile" class="control-label">Logo</label>
                     <div class="custom-file">
-                        <input type="file" class="form-control" id="logoFile" name="LogotipoFile" accept="image/*" onchange="previewLogo(this);" />
+                        <div class="input-group">
+                            <input type="file" class="form-control" id="logoFile" name="LogotipoFile" accept="image/*" onchange="previewLogo(this);" />
+                            <label class="input-group-text" for="logoFile">Escolher arquivo</label>
+                        </div>
+                        <small class="form-text text-muted">
+                            Formatos aceitos: JPG, PNG, GIF. Tamanho máximo: 2MB
+                        </small>
                     </div>
                     <div id="logoPreviewContainer" class="mt-2" style="display: none;">
-                        <img id="logoPreview" src="#" alt="Preview do Logo" style="max-width: 200px; max-height: 200px;" class="img-thumbnail" />
-                        <button type="button" class="btn btn-sm btn-danger mt-2" onclick="removeLogo();">Remover Logo</button>
+                        <div class="card" style="max-width: 200px;">
+                            <img id="logoPreview" src="#" alt="Preview do Logo" class="card-img-top" />
+                            <div class="card-body">
+                                <button type="button" class="btn btn-sm btn-danger w-100" onclick="removeLogo();">
+                                    <i class="bi bi-trash"></i> Remover Logo
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -69,12 +81,18 @@
                 </div>
 
                 <div class="form-group mb-3">
-                    <button type="button" id="addEndereco" class="btn btn-secondary">Adicionar Endereço</button>
+                    <button type="button" id="addEndereco" class="btn btn-secondary">
+                        <i class="bi bi-plus-circle"></i> Adicionar Endereço
+                    </button>
                 </div>
 
                 <div class="form-group">
-                    <button type="submit" class="btn btn-primary" id="btnSubmit">Criar</button>
-                    <a asp-action="Index" class="btn btn-secondary">Voltar</a>
+                    <button type="submit" class="btn btn-primary" id="btnSubmit">
+                        <i class="bi bi-check-circle"></i> Criar
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Voltar
+                    </a>
                 </div>
             </form>
         </div>
@@ -85,6 +103,37 @@
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
     
     <script>
+        function previewLogo(input) {
+            if (input.files && input.files[0]) {
+                // Verificar o tamanho do arquivo (2MB = 2 * 1024 * 1024 bytes)
+                if (input.files[0].size > 2 * 1024 * 1024) {
+                    alert('O arquivo é muito grande! O tamanho máximo permitido é 2MB.');
+                    input.value = '';
+                    return;
+                }
+
+                // Verificar o tipo do arquivo
+                var allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+                if (!allowedTypes.includes(input.files[0].type)) {
+                    alert('Tipo de arquivo não permitido! Use apenas JPG, PNG ou GIF.');
+                    input.value = '';
+                    return;
+                }
+
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#logoPreview').attr('src', e.target.result);
+                    $('#logoPreviewContainer').fadeIn();
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function removeLogo() {
+            $('#logoFile').val('');
+            $('#logoPreviewContainer').fadeOut();
+        }
+
         $(document).ready(function () {
             var form = $("#createForm");
             
@@ -98,77 +147,30 @@
                             <input name="Logradouros[${index}].Endereco" class="form-control" />
                             <span class="text-danger"></span>
                         </div>
-                        <button type="button" class="btn btn-danger btn-sm mt-2 remover-endereco">Remover Endereço</button>
-                    </div>`;
+                        <button type="button" class="btn btn-danger btn-sm mt-2 remover-endereco">
+                            <i class="bi bi-trash"></i> Remover Endereço
+                        </button>
+                    </div>
+                `;
                 $("#enderecos").append(novoEndereco);
             });
-
+            
             // Remover endereço
             $(document).on("click", ".remover-endereco", function () {
-                $(this).closest(".endereco-item").remove();
-                reindexarEnderecos();
+                $(this).closest(".endereco-item").fadeOut(300, function() {
+                    $(this).remove();
+                });
             });
 
-            // Reindexar endereços após remoção
-            function reindexarEnderecos() {
-                $("#enderecos .endereco-item").each(function (index) {
-                    $(this).find("input").attr("name", `Logradouros[${index}].Endereco`);
-                });
-            }
-
-            // Limpar formulário após sucesso
-            if (@Json.Serialize(TempData["Success"] != null)) {
-                form[0].reset();
-                $("#enderecos").empty();
-                $("#btnSubmit").prop("disabled", false).html('Criar');
-            }
-
-            // Desabilitar botão ao enviar
+            // Validação do formulário
             form.on("submit", function (e) {
-                if (form.valid()) {
-                    $("#btnSubmit").prop("disabled", true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Salvando...');
+                if (!form.valid()) {
+                    e.preventDefault();
+                    return false;
                 }
+                $("#btnSubmit").prop("disabled", true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Criando...');
+                return true;
             });
         });
-
-        function previewLogo(input) {
-            const preview = document.getElementById('logoPreview');
-            const container = document.getElementById('logoPreviewContainer');
-            
-            if (input.files && input.files[0]) {
-                const file = input.files[0];
-                
-                // Verificar o tipo do arquivo
-                if (!file.type.match('image.*')) {
-                    alert('Por favor, selecione apenas arquivos de imagem.');
-                    input.value = '';
-                    return;
-                }
-                
-                // Verificar o tamanho (2MB)
-                if (file.size > 2 * 1024 * 1024) {
-                    alert('O arquivo não pode ser maior que 2MB.');
-                    input.value = '';
-                    return;
-                }
-
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.src = e.target.result;
-                    container.style.display = 'block';
-                }
-                reader.readAsDataURL(file);
-            }
-        }
-
-        function removeLogo() {
-            const input = document.getElementById('logoFile');
-            const preview = document.getElementById('logoPreview');
-            const container = document.getElementById('logoPreviewContainer');
-            
-            input.value = '';
-            preview.src = '#';
-            container.style.display = 'none';
-        }
     </script>
 }
