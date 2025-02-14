@@ -69,7 +69,8 @@
             const div = document.createElement('div');
             div.className = 'endereco-item mb-2 d-flex';
             div.innerHTML = `
-                <input type="text" name="Logradouros[${enderecoCount}].Endereco" class="form-control" placeholder="Digite o endereço" />
+                <input type="hidden" name="Logradouros[${enderecoCount}].Id" value="0" />
+                <input type="text" name="Logradouros[${enderecoCount}].Endereco" class="form-control" placeholder="Digite o endereço" required />
                 <button type="button" class="btn btn-danger ms-2" onclick="removerEndereco(this)">X</button>
             `;
             container.appendChild(div);
@@ -77,7 +78,25 @@
         }
 
         function removerEndereco(button) {
-            button.parentElement.remove();
+            const endereco = button.closest('.endereco-item');
+            endereco.remove();
+            
+            // Reordenar os índices dos endereços restantes
+            const container = document.getElementById('enderecosContainer');
+            const enderecos = container.querySelectorAll('.endereco-item');
+            enderecos.forEach((item, index) => {
+                const idInput = item.querySelector('input[name$="].Id"]');
+                const enderecoInput = item.querySelector('input[name$="].Endereco"]');
+                
+                if (idInput) {
+                    idInput.name = `Logradouros[${index}].Id`;
+                }
+                if (enderecoInput) {
+                    enderecoInput.name = `Logradouros[${index}].Endereco`;
+                }
+            });
+            
+            enderecoCount = enderecos.length;
         }
 
         function previewLogo(input) {
