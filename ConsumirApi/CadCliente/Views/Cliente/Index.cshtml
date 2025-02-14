@@ -1,108 +1,117 @@
 @model IEnumerable<CadCliente.Models.ClienteViewModel>
 
 @{
-    ViewData["Title"] = "Lista de Clientes";
+    ViewData["Title"] = "Clientes";
 }
 
-<h1>@ViewData["Title"]</h1>
+<div class="container">
+    <h1 class="mb-4">@ViewData["Title"]</h1>
 
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        @TempData["SuccessMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="mb-3">
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Novo Cliente
+        </a>
     </div>
-}
 
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        @TempData["Error"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    <div id="loading" class="text-center" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Carregando...</span>
+        </div>
+        <p class="mt-2">Carregando clientes...</p>
     </div>
-}
 
-<div id="loadingMessage" class="alert alert-info" style="display: none;">
-    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-    Carregando clientes...
-</div>
-
-<div id="successMessage" class="alert alert-success" style="display: none;">
-    Clientes carregados com sucesso!
-</div>
-
-<p>
-    <a asp-action="Create" class="btn btn-primary">Novo Cliente</a>
-</p>
-
-<table class="table" id="clientesTable" style="display: none;">
-    <thead>
-        <tr>
-            <th>Logo</th>
-            <th>Nome</th>
-            <th>Email</th>
-            <th>Endereços</th>
-            <th>Ações</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
+    <div id="clientesContainer">
+        @if (Model != null && Model.Any())
         {
-            <tr>
-                <td>
-                    @if (!string.IsNullOrEmpty(item.LogotipoBase64))
-                    {
-                        <img src="@item.LogotipoBase64" alt="Logo" style="max-width: 50px; max-height: 50px; cursor: pointer;" 
-                             onclick="showLogoModal('@item.LogotipoBase64', '@item.Nome')" />
-                    }
-                    else
-                    {
-                        <span class="text-muted">Sem logo</span>
-                    }
-                </td>
-                <td>@item.Nome</td>
-                <td>@item.Email</td>
-                <td>
-                    @if (item.Logradouros != null && item.Logradouros.Any())
-                    {
-                        <div class="dropdown">
-                            <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="dropdownEnderecos_@item.Id" data-bs-toggle="dropdown" aria-expanded="false">
-                                Ver Endereços (@item.Logradouros.Count)
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="dropdownEnderecos_@item.Id">
-                                @foreach (var endereco in item.Logradouros)
-                                {
-                                    <li><span class="dropdown-item">@endereco.Endereco</span></li>
-                                }
-                            </ul>
-                        </div>
-                    }
-                    else
-                    {
-                        <span class="text-muted">Sem endereços</span>
-                    }
-                </td>
-                <td>
-                    <div class="btn-group">
-                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Editar</a>
-                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm" onclick="return confirm('Tem certeza que deseja excluir este cliente?')">Excluir</a>
-                    </div>
-                </td>
-            </tr>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Logo</th>
+                            <th>Nome</th>
+                            <th>Email</th>
+                            <th>Endereços</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(item.LogotipoUrl))
+                                    {
+                                        <img src="@item.LogotipoUrl" alt="Logo" style="max-width: 50px; max-height: 50px;" class="img-thumbnail" />
+                                    }
+                                </td>
+                                <td>@item.Nome</td>
+                                <td>@item.Email</td>
+                                <td>
+                                    @if (item.Logradouros != null && item.Logradouros.Any())
+                                    {
+                                        <ul class="list-unstyled mb-0">
+                                            @foreach (var endereco in item.Logradouros)
+                                            {
+                                                <li>@endereco.Endereco</li>
+                                            }
+                                        </ul>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">
+                                            <i class="bi bi-pencil"></i> Editar
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-danger" onclick="confirmarExclusao(@item.Id)">
+                                            <i class="bi bi-trash"></i> Excluir
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         }
-    </tbody>
-</table>
+        else
+        {
+            <div class="alert alert-info">
+                Nenhum cliente cadastrado.
+            </div>
+        }
+    </div>
+</div>
 
-<!-- Modal para exibir o logo em tamanho maior -->
-<div class="modal fade" id="logoModal" tabindex="-1" aria-labelledby="logoModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+<!-- Modal de Confirmação -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="logoModalLabel">Logo</h5>
+                <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar Exclusão</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body text-center">
-                <img id="modalLogoImage" src="" alt="Logo" style="max-width: 100%;" />
+            <div class="modal-body">
+                Tem certeza que deseja excluir este cliente?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="btnConfirmDelete">Excluir</button>
             </div>
         </div>
     </div>
@@ -110,34 +119,54 @@
 
 @section Scripts {
     <script>
-        // Quando a página carregar
-        document.addEventListener('DOMContentLoaded', function () {
-            // Mostrar mensagem de carregamento
-            document.getElementById('loadingMessage').style.display = 'block';
-            
-            // Simular um pequeno delay para mostrar o carregamento
-            setTimeout(function() {
-                // Esconder mensagem de carregamento
-                document.getElementById('loadingMessage').style.display = 'none';
-                
-                // Mostrar mensagem de sucesso
-                document.getElementById('successMessage').style.display = 'block';
-                
-                // Mostrar a tabela
-                document.getElementById('clientesTable').style.display = 'table';
-                
-                // Esconder mensagem de sucesso após 3 segundos
-                setTimeout(function() {
-                    document.getElementById('successMessage').style.display = 'none';
-                }, 3000);
-            }, 1000);
+        let clienteIdParaExcluir = null;
+        const modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+
+        function confirmarExclusao(id) {
+            clienteIdParaExcluir = id;
+            modal.show();
+        }
+
+        document.getElementById('btnConfirmDelete').addEventListener('click', function () {
+            if (clienteIdParaExcluir) {
+                excluirCliente(clienteIdParaExcluir);
+            }
         });
 
-        function showLogoModal(logoBase64, nome) {
-            document.getElementById('modalLogoImage').src = logoBase64;
-            document.getElementById('logoModalLabel').textContent = 'Logo - ' + nome;
-            var modal = new bootstrap.Modal(document.getElementById('logoModal'));
-            modal.show();
+        function excluirCliente(id) {
+            // Mostrar loading
+            document.body.style.cursor = 'wait';
+            const btnConfirmDelete = document.getElementById('btnConfirmDelete');
+            btnConfirmDelete.disabled = true;
+            btnConfirmDelete.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Excluindo...';
+
+            fetch(`/Cliente/Delete/${id}`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                modal.hide();
+                if (data.success) {
+                    // Recarregar a página após um breve delay
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 500);
+                } else {
+                    alert(data.message || 'Erro ao excluir o cliente.');
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert('Erro ao excluir o cliente.');
+            })
+            .finally(() => {
+                document.body.style.cursor = 'default';
+                btnConfirmDelete.disabled = false;
+                btnConfirmDelete.innerHTML = 'Excluir';
+            });
         }
     </script>
 }

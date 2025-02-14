@@ -134,26 +134,35 @@ namespace CadCliente.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             try
             {
-                _logger.LogInformation("Iniciando exclusão do cliente: {Id}", id);
-                await _apiService.DeleteClienteAsync(id);
-                _logger.LogInformation("Cliente excluído com sucesso: {Id}", id);
-                
-                TempData["SuccessMessage"] = "Cliente excluído com sucesso!";
-            }
-            catch (UnauthorizedAccessException)
-            {
-                _logger.LogWarning("Usuário não está autenticado. Redirecionando para login");
-                return RedirectToAction("Login", "Auth");
+                var result = await _apiService.DeleteAsync($"Cliente/{id}");
+                if (result)
+                {
+                    if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    {
+                        return Json(new { success = true });
+                    }
+                    TempData["Success"] = "Cliente excluído com sucesso!";
+                }
+                else
+                {
+                    if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                    {
+                        return Json(new { success = false, message = "Erro ao excluir o cliente." });
+                    }
+                    TempData["Error"] = "Erro ao excluir o cliente.";
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao excluir cliente: {Id}", id);
-                TempData["Error"] = $"Erro ao excluir cliente: {ex.Message}";
+                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+                {
+                    return Json(new { success = false, message = "Erro ao excluir o cliente: " + ex.Message });
+                }
+                TempData["Error"] = "Erro ao excluir o cliente: " + ex.Message;
             }
 
             return RedirectToAction(nameof(Index));
