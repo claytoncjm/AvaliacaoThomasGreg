@@ -112,6 +112,7 @@ namespace CadCliente.Controllers
                 if (ModelState.IsValid)
                 {
                     _logger.LogInformation("Iniciando atualização do cliente: {Id}", id);
+                    cliente.Id = id; // Garantir que o ID está correto
                     await _apiService.UpdateClienteAsync(id, cliente);
                     _logger.LogInformation("Cliente atualizado com sucesso: {Id}", id);
                     
