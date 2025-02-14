@@ -97,6 +97,18 @@ namespace ApiCadCliente.Controllers
                     cliente.LogotipoContentType = clienteDto.LogotipoFile.ContentType;
                 }
 
+                // Adicionar os endereços
+                if (clienteDto.Logradouros != null)
+                {
+                    foreach (var logradouroDto in clienteDto.Logradouros)
+                    {
+                        cliente.Logradouros.Add(new Logradouro
+                        {
+                            Endereco = logradouroDto.Endereco
+                        });
+                    }
+                }
+
                 _context.Clientes.Add(cliente);
                 await _context.SaveChangesAsync();
 
@@ -107,7 +119,12 @@ namespace ApiCadCliente.Controllers
                     Email = cliente.Email,
                     LogotipoBytes = cliente.LogotipoBytes,
                     LogotipoContentType = cliente.LogotipoContentType,
-                    Logradouros = new List<LogradouroDTO>()
+                    Logradouros = cliente.Logradouros.Select(l => new LogradouroDTO
+                    {
+                        Id = l.Id,
+                        Endereco = l.Endereco,
+                        ClienteId = l.ClienteId
+                    }).ToList()
                 };
 
                 return CreatedAtAction(nameof(GetCliente), new { id = cliente.Id }, createdClienteDto);
@@ -149,6 +166,39 @@ namespace ApiCadCliente.Controllers
                 await clienteDto.LogotipoFile.CopyToAsync(ms);
                 cliente.LogotipoBytes = ms.ToArray();
                 cliente.LogotipoContentType = clienteDto.LogotipoFile.ContentType;
+            }
+
+            // Atualizar os endereços
+            if (clienteDto.Logradouros != null)
+            {
+                // Remover endereços que não estão mais na lista
+                var logradourosParaRemover = cliente.Logradouros
+                    .Where(l => !clienteDto.Logradouros.Any(dto => dto.Id == l.Id))
+                    .ToList();
+
+                foreach (var logradouro in logradourosParaRemover)
+                {
+                    cliente.Logradouros.Remove(logradouro);
+                }
+
+                // Atualizar ou adicionar novos endereços
+                foreach (var logradouroDto in clienteDto.Logradouros)
+                {
+                    var logradouro = cliente.Logradouros.FirstOrDefault(l => l.Id == logradouroDto.Id);
+                    if (logradouro != null)
+                    {
+                        // Atualizar endereço existente
+                        logradouro.Endereco = logradouroDto.Endereco;
+                    }
+                    else
+                    {
+                        // Adicionar novo endereço
+                        cliente.Logradouros.Add(new Logradouro
+                        {
+                            Endereco = logradouroDto.Endereco
+                        });
+                    }
+                }
             }
 
             try

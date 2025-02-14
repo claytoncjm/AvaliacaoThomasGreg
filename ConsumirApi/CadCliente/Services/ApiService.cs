@@ -229,6 +229,15 @@ namespace CadCliente.Services
                     form.Add(fileContent, "LogotipoFile", cliente.LogotipoFile.FileName);
                 }
 
+                // Adicionar os endereços
+                if (cliente.Logradouros != null)
+                {
+                    for (int i = 0; i < cliente.Logradouros.Count; i++)
+                    {
+                        form.Add(new StringContent(cliente.Logradouros[i].Endereco), $"Logradouros[{i}].Endereco");
+                    }
+                }
+
                 var response = await _httpClient.PostAsync($"{_apiBaseUrl}Cliente", form);
                 var responseContent = await response.Content.ReadAsStringAsync();
                 

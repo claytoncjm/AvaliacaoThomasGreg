@@ -37,6 +37,8 @@ namespace ApiCadCliente.Models.DTOs
         public string Email { get; set; } = string.Empty;
 
         public IFormFile? LogotipoFile { get; set; }
+
+        public List<LogradouroCreateDTO> Logradouros { get; set; } = new();
     }
 
     public class ClienteUpdateDTO
@@ -52,11 +54,15 @@ namespace ApiCadCliente.Models.DTOs
 
         public IFormFile? LogotipoFile { get; set; }
         public bool RemoverLogotipo { get; set; }
+
+        public List<LogradouroUpdateDTO> Logradouros { get; set; } = new();
     }
 
     public class LogradouroDTO
     {
         public int Id { get; set; }
+        [Required(ErrorMessage = "O endereço é obrigatório")]
+        [StringLength(200, ErrorMessage = "O endereço deve ter no máximo 200 caracteres")]
         public string Endereco { get; set; } = string.Empty;
         public int ClienteId { get; set; }
     }
@@ -71,7 +77,7 @@ namespace ApiCadCliente.Models.DTOs
     public class LogradouroUpdateDTO
     {
         public int Id { get; set; }
-        
+
         [Required(ErrorMessage = "O endereço é obrigatório")]
         [StringLength(200, ErrorMessage = "O endereço deve ter no máximo 200 caracteres")]
         public string Endereco { get; set; } = string.Empty;
