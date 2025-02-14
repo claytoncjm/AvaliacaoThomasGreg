@@ -20,12 +20,28 @@ Sistema de cadastro de clientes desenvolvido em ASP.NET Core MVC que consome uma
 - jQuery
 - Bootstrap Icons
 
-## Configuração
+## Configuração e Uso
 
-1. Clone o repositório
-2. Configure a string de conexão no arquivo `appsettings.json`
-3. Execute as migrations do banco de dados
-4. Execute o projeto
+### API (ApiCadCliente)
+
+1. Configure a string de conexão no `appsettings.json`
+2. Execute as migrations do banco de dados
+3. Execute a API
+4. Para testar a API:
+   - Primeiro crie um usuário usando o endpoint de registro
+   - Faça login para obter o token JWT
+   - Para todas as outras requisições, use o token no header:
+     - Adicione o header `Authorization: Bearer {seu-token-aqui}`
+     - Substitua `{seu-token-aqui}` pelo token obtido no login
+
+### Aplicação Web (CadCliente)
+
+1. Configure a URL da API no `appsettings.json`
+2. Execute a aplicação
+3. Na tela de login:
+   - Se for primeiro acesso, clique em "Criar Conta"
+   - Registre-se com email e senha
+   - Faça login com as credenciais criadas
 
 ## Estrutura do Projeto
 
@@ -58,7 +74,9 @@ Sistema de cadastro de clientes desenvolvido em ASP.NET Core MVC que consome uma
 ## Como Usar
 
 1. Acesse a aplicação
-2. Faça login ou registre-se
+2. Na tela de login:
+   - Se já tem conta: faça login com email e senha
+   - Se é novo usuário: clique em "Criar Conta" e registre-se
 3. Na lista de clientes, você pode:
    - Ver todos os clientes cadastrados
    - Adicionar novo cliente
@@ -72,3 +90,4 @@ Sistema de cadastro de clientes desenvolvido em ASP.NET Core MVC que consome uma
 - O tamanho máximo para upload de logo é 2MB
 - Formatos aceitos: JPG, PNG, GIF
 - É necessário estar autenticado para acessar as funcionalidades
+- Para testar a API diretamente, lembre-se de incluir o token JWT com o prefixo "Bearer" no header Authorization
