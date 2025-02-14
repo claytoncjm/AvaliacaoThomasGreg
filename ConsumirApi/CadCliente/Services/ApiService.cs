@@ -261,7 +261,32 @@ namespace CadCliente.Services
                 EnsureTokenIsSet();
                 await ProcessLogoFile(cliente);
 
-                var response = await _httpClient.PutAsJsonAsync($"{_apiBaseUrl}Cliente/{id}", cliente);
+                // Criar um formulário multipart
+                var form = new MultipartFormDataContent();
+                form.Add(new StringContent(cliente.Id.ToString()), "Id");
+                form.Add(new StringContent(cliente.Nome), "Nome");
+                form.Add(new StringContent(cliente.Email), "Email");
+
+                // Adicionar o arquivo se existir
+                if (cliente.LogotipoFile != null)
+                {
+                    var fileContent = new StreamContent(cliente.LogotipoFile.OpenReadStream());
+                    fileContent.Headers.ContentType = new MediaTypeHeaderValue(cliente.LogotipoFile.ContentType);
+                    form.Add(fileContent, "LogotipoFile", cliente.LogotipoFile.FileName);
+                }
+
+                // Adicionar os endereços
+                if (cliente.Logradouros != null)
+                {
+                    for (int i = 0; i < cliente.Logradouros.Count; i++)
+                    {
+                        if (cliente.Logradouros[i].Id > 0)
+                            form.Add(new StringContent(cliente.Logradouros[i].Id.ToString()), $"Logradouros[{i}].Id");
+                        form.Add(new StringContent(cliente.Logradouros[i].Endereco), $"Logradouros[{i}].Endereco");
+                    }
+                }
+
+                var response = await _httpClient.PutAsync($"{_apiBaseUrl}Cliente/{id}", form);
                 var responseContent = await response.Content.ReadAsStringAsync();
                 
                 _logger.LogInformation("Resposta da API - StatusCode: {StatusCode}, Content: {Content}",
